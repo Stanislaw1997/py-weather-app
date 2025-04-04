@@ -1,4 +1,5 @@
 import requests
+import os
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout
 )
@@ -39,7 +40,8 @@ class WeatherApp(QWidget):
 
     def initUI(self):
         self.setWindowTitle("Weather App")
-        self.setWindowIcon(QIcon("Projects Python\\weatherapp\\icon.jpg"))
+        icon_path = os.path.join(os.path.dirname(__file__), "icon.jpg") # Houston, we have a problem! Relative path doesn't seem to work for some reason!@#!@!@!@#
+        self.setWindowIcon(QIcon(icon_path))
 
         vbox = QVBoxLayout()
 
