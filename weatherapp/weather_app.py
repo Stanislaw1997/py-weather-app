@@ -1,5 +1,7 @@
 import requests
-from PyQt5.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import (
+    QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout
+)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from weather_utils import get_weather_data, get_weather_emoji
@@ -9,6 +11,8 @@ class WeatherApp(QWidget):
         super().__init__()
         self.api_key = "025890427621353419ae99b0dde95498"
         self.setGeometry(600, 250, 350, 570)
+
+        self.current_theme = "light"
         self.setup_widgets()
         self.initUI()
 
@@ -21,44 +25,87 @@ class WeatherApp(QWidget):
         self.feels_like = QLabel()
         self.emoji_label = QLabel()
         self.description_label = QLabel()
+        self.theme_toggle = QPushButton("🌙")
+        self.theme_toggle.setFixedSize(40, 40)
 
         for widget, name in zip(
-            [self.city_label, self.city_input, self.get_weather_button, self.city_info_label, self.temp_label, self.feels_like, self.emoji_label, self.description_label],
-            ["city_label", "city_input", "get_weather_button", "city_info_label", "temp_label", "feels_like", "emoji_label", "description_label"]):
+            [self.city_label, self.city_input, self.get_weather_button,
+             self.city_info_label, self.temp_label, self.feels_like,
+             self.emoji_label, self.description_label],
+            ["city_label", "city_input", "get_weather_button",
+             "city_info_label", "temp_label", "feels_like",
+             "emoji_label", "description_label"]):
             widget.setObjectName(name)
 
     def initUI(self):
         self.setWindowTitle("Weather App")
-        self.setWindowIcon(QIcon("icon.jpg"))
+        self.setWindowIcon(QIcon("Projects Python\\weatherapp\\icon.jpg"))
 
         vbox = QVBoxLayout()
+
+        # Top bar com botão de tema
+        top_bar = QHBoxLayout()
+        top_bar.addStretch()
+        top_bar.addWidget(self.theme_toggle)
+        vbox.addLayout(top_bar)
+
+        # Widgets principais
         widgets = [
             self.city_label, self.city_input, self.get_weather_button,
             self.city_info_label, self.temp_label, self.feels_like,
             self.emoji_label, self.description_label
         ]
-
         for widget in widgets:
             vbox.addWidget(widget)
             if widget != self.get_weather_button:
                 widget.setAlignment(Qt.AlignCenter)
 
         self.setLayout(vbox)
-        self.apply_styles()
-        self.get_weather_button.clicked.connect(self.get_weather)
 
-    def apply_styles(self):
+        self.apply_light_theme()
+
+        self.get_weather_button.clicked.connect(self.get_weather)
+        self.theme_toggle.clicked.connect(self.toggle_theme)
+
+    def apply_light_theme(self):
         self.setStyleSheet("""
-            QLabel, QPushButton { font-family: calibri; }
+            QWidget { background-color: #f5f5f5; }
+            QLabel, QPushButton { font-family: calibri; color: #333; }
             QLabel#city_label { font-size: 40px; font-style: italic; }
-            QLineEdit#city_input { font-size: 30px; }
-            QPushButton#get_weather_button { font-size: 30px; font-weight: bold; }
+            QLineEdit#city_input { font-size: 30px; padding: 5px; background-color: white; color: black; }
+            QPushButton#get_weather_button { font-size: 30px; font-weight: bold; background-color: #87CEEB; }
+            QPushButton { border-radius: 8px; }
             QLabel#city_info_label { font-size: 15px; font-weight: bold; }
             QLabel#temp_label { font-size: 75px; }
             QLabel#feels_like { font-size: 30px; font-weight: bold; }
             QLabel#emoji_label { font-size: 100px; font-family: Segoe UI emoji; }
             QLabel#description_label { font-size: 50px; }
         """)
+        self.theme_toggle.setText("🌙")
+        self.current_theme = "light"
+
+    def apply_dark_theme(self):
+        self.setStyleSheet("""
+            QWidget { background-color: #2c2c2c; }
+            QLabel, QPushButton { font-family: calibri; color: #f0f0f0; }
+            QLabel#city_label { font-size: 40px; font-style: italic; }
+            QLineEdit#city_input { font-size: 30px; padding: 5px; background-color: #444; color: white; }
+            QPushButton#get_weather_button { font-size: 30px; font-weight: bold; background-color: #5dade2; color: white; }
+            QPushButton { border-radius: 8px; }
+            QLabel#city_info_label { font-size: 15px; font-weight: bold; }
+            QLabel#temp_label { font-size: 75px; }
+            QLabel#feels_like { font-size: 30px; font-weight: bold; }
+            QLabel#emoji_label { font-size: 100px; font-family: Segoe UI emoji; }
+            QLabel#description_label { font-size: 50px; }
+        """)
+        self.theme_toggle.setText("☀️")
+        self.current_theme = "dark"
+
+    def toggle_theme(self):
+        if self.current_theme == "light":
+            self.apply_dark_theme()
+        else:
+            self.apply_light_theme()
 
     def get_weather(self):
         city = self.city_input.text()
@@ -69,7 +116,6 @@ class WeatherApp(QWidget):
                 self.display_weather(geo_data, weather_data)
             
         except requests.exceptions.HTTPError as http_error:
-            # Handle HTTP errors
             if http_error.response.status_code == 400:
                 self.display_error("Bad request\nPlease check your input.")
             elif http_error.response.status_code == 401:
@@ -101,8 +147,6 @@ class WeatherApp(QWidget):
         except requests.exceptions.RequestException as req_error:
             self.display_error(f"Request error:\n{req_error}")
 
-     
-    
     def display_error(self, message):
         self.city_info_label.clear()
         self.temp_label.setStyleSheet("font-size: 30px;")
